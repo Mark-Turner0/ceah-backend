@@ -1,0 +1,6 @@
+gimp-2.10
+google chrome
+zoom.us
+android studio
+firefox
+checkra1n
