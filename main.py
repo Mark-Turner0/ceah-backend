@@ -12,7 +12,7 @@ def communicate(conn, addr):
         assert data.startswith("SYN")
         print(data)
         unique = data[-7:]
-        response = "ACK "+unique
+        response = "ACK " + unique
         print(response)
 
         conn.send(response.encode())
@@ -56,6 +56,7 @@ def main():
     server = socket.socket()
     server.bind((socket.gethostname(), 1701))
     server.listen(5)
+    print("Listening...")
     while True:
         conn, addr = server.accept()
         print("Inbound connection from", addr[0])

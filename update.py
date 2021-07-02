@@ -6,9 +6,9 @@ import re
 
 def updateBrew():
     urls = [
-            "https://formulae.brew.sh/api/formula.json",
-            "https://formulae.brew.sh/api/cask.json"
-            ]
+           "https://formulae.brew.sh/api/formula.json",
+           "https://formulae.brew.sh/api/cask.json"
+           ]
 
     data = {}
 
@@ -28,10 +28,10 @@ def updateBrew():
 def complexVersionGet(latest_version):
     STABLE_RELEASE = "Q2804309"
     ALIASES = {
-            "Q14116": "macos",
-            "Q1406": "windows",
-            "Q388": "linux"
-            }
+              "Q14116": "macos",
+              "Q1406": "windows",
+              "Q388": "linux"
+              }
     try:
         entity = re.search("\| ?(Q.*?)\|", latest_version).groups()[0]  # noqa: W605
     except AttributeError:
@@ -62,7 +62,7 @@ def versionGet(software):
         api_response = urllib.request.urlopen(
             "https://en.wikipedia.org/w/index.php?action=raw&title=Template:Latest_stable_software_release/" + software,
             context=ssl.SSLContext(ssl.PROTOCOL_TLS)
-            ).read().decode()
+                                             ).read().decode()
 
     except urllib.error.HTTPError:
 
