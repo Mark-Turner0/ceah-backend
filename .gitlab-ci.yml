@@ -4,7 +4,7 @@
 # This specific template is located at:
 # https://gitlab.com/gitlab-org/gitlab/-/blob/master/lib/gitlab/ci/templates/Python.gitlab-ci.yml
 
-image: docker:latest
+image: python:latest
 
 # Change pip's cache directory to be inside the project directory since we can
 # only cache local items.
@@ -21,8 +21,18 @@ cache:
     - .cache/pip
     - venv/
 
+build docker image:
+  stage: build
+  image: docker:latest
+  services:
+    - docker:stable-dind
+  before_script:
+    - docker version
+  script:
+    - DOCKER_BUILDKIT=1 docker build -t ceah-backend --secret id=DB_USERNAME --secret id=DB_PASSWORD . --no-cache
+
 lint:
-  image: python:latest
+  stage: test
   before_script:
     - python -V  # Print out python version for debugging
     - pip install virtualenv
@@ -32,11 +42,17 @@ lint:
     - pip install flake8
     - flake8 --ignore=E501 *.py
 
-build:
-  services:
-    - docker:stable-dind
+deploy digitalocean:
+  stage: deploy
   before_script:
-    - docker version
+    - eval $(ssh-agent -s)
+    - ssh-add <(echo "$SSH_KEY")
+    - mkdir -p ~/.ssh
+    - echo "$SSH_KNOWN_HOSTS" >> ~/.ssh/known_hosts
+    - chmod 644 ~/.ssh/known_hosts
   script:
-    - DOCKER_BUILDKIT=1 docker build -t ceah-backend --secret id=DB_USERNAME --secret id=DB_PASSWORD . --no-cache
-
+    - ssh root@app.markturner.uk "cd ceah-backend && git pull & docker stop ceah-backend && docker rm ceah-backend && docker rmi -f ceah-backend"
+    - ssh root@app.markturner.uk DB_USERNAME=$DB_USERNAME DB_PASSWORD=$DB_PASSWORD "DOCKER_BUILDKIT=1 docker build -t ceah-backend --secret id=DB_USERNAME --secret id=DB_PASSWORD ./ceah-backend --no-cache"
+    - ssh root@app.markturner.uk DB_USERNAME=$DB_USERNAME DB_PASSWORD=$DB_PASSWORD "docker run -p 1701:1701 -e DB_USERNAME=$DB_USERNAME -e DB_PASSWORD=$DB_PASSWORD -d --name ceah-backend ceah-backend"
+  only:
+    - master
