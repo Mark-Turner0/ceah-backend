@@ -4,9 +4,7 @@
 # This specific template is located at:
 # https://gitlab.com/gitlab-org/gitlab/-/blob/master/lib/gitlab/ci/templates/Python.gitlab-ci.yml
 
-# Official language image. Look for the different tagged releases at:
-# https://hub.docker.com/r/library/python/tags/
-image: python:latest
+image: docker:latest
 
 # Change pip's cache directory to be inside the project directory since we can
 # only cache local items.
@@ -23,17 +21,22 @@ cache:
     - .cache/pip
     - venv/
 
-before_script:
-  - python -V  # Print out python version for debugging
-  - pip install virtualenv
-  - virtualenv venv
-  - source venv/bin/activate
-
 lint:
+  image: python:latest
+  before_script:
+    - python -V  # Print out python version for debugging
+    - pip install virtualenv
+    - virtualenv venv
+    - source venv/bin/activate
   script:
     - pip install flake8
     - flake8 --ignore=E501 *.py
 
 build:
+  services:
+    - docker:stable-dind
+  before_script:
+    - docker version
   script:
     - DOCKER_BUILDKIT=1 docker build -t ceah-backend --secret id=DB_USERNAME --secret id=DB_PASSWORD . --no-cache
+
