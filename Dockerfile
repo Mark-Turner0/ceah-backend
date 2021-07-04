@@ -4,8 +4,10 @@ WORKDIR /ceah-backend
 
 COPY ./ .
 
-RUN python3 update.py
+RUN python3 -m pip install pymongo
 
-RUN mkdir data
+RUN python3 -m pip install dnspython
 
-CMD ["python3", "-u", "main.py"]
+RUN --mount=type=secret,id=DB_USERNAME --mount=type=secret,id=DB_PASSWORD python3 -u update.py $(cat /run/secrets/DB_USERNAME) $(cat /run/secrets/DB_PASSWORD)
+
+CMD python3 -u main.py $DB_USERNAME $DB_PASSWORD

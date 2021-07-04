@@ -1,19 +1,20 @@
+from database import getDB, pushDB, popDB, readDB
 import json
 import urllib.request
 import ssl
 import re
+import sys
+from time import gmtime, strftime
 
 
 def updateBrew():
     urls = [
-           "https://formulae.brew.sh/api/formula.json",
-           "https://formulae.brew.sh/api/cask.json"
-           ]
+        "https://formulae.brew.sh/api/formula.json",
+        "https://formulae.brew.sh/api/cask.json"]
 
     data = {}
 
     for url in urls:
-        print("run", url)
         api_response = urllib.request.urlopen(url, context=ssl.SSLContext(ssl.PROTOCOL_TLS)).read().decode()
         api_response = json.loads(api_response)
 
@@ -28,10 +29,9 @@ def updateBrew():
 def complexVersionGet(latest_version):
     STABLE_RELEASE = "Q2804309"
     ALIASES = {
-              "Q14116": "macos",
-              "Q1406": "windows",
-              "Q388": "linux"
-              }
+        "Q14116": "macos",
+        "Q1406": "windows",
+        "Q388": "linux"}
     try:
         entity = re.search("\| ?(Q.*?)\|", latest_version).groups()[0]  # noqa: W605
     except AttributeError:
@@ -61,15 +61,14 @@ def versionGet(software):
     try:
         api_response = urllib.request.urlopen(
             "https://en.wikipedia.org/w/index.php?action=raw&title=Template:Latest_stable_software_release/" + software,
-            context=ssl.SSLContext(ssl.PROTOCOL_TLS)
-                                             ).read().decode()
+            context=ssl.SSLContext(ssl.PROTOCOL_TLS)).read().decode()
 
     except urllib.error.HTTPError:
 
         try:
             api_response = urllib.request.urlopen(
-                    "http://en.wikipedia.org/w/index.php?action=raw&title=" + software,
-                    context=ssl.SSLContext(ssl.PROTOCOL_TLS)).read().decode()
+                "http://en.wikipedia.org/w/index.php?action=raw&title=" + software,
+                context=ssl.SSLContext(ssl.PROTOCOL_TLS)).read().decode()
 
         except urllib.error.HTTPError:
             return False
@@ -95,26 +94,25 @@ def versionGet(software):
 
 
 def main():
-    f = open("wikidata.json", 'r')
-    data = f.read()
-    f.close()
-    data = json.loads(data)
+    db = getDB(sys.argv[1], sys.argv[2])
+    data = readDB(db, "wikidata")
 
     # UPDATE FROM WIKIPEDIA
+    print("Updating Wikipedia versions...")
+    currentdt = strftime("%d%m%H%M%S", gmtime())
     for i in data.keys():
         software = i.title() if i.islower() else i
         data[i] = versionGet(software.replace(' ', '_'))
 
-    f = open("wikidata.json", 'w')
-    f.write(json.dumps(data, indent='\t'))
-    f.close()
+    popDB(db["version_data"], data, "wikidata")
+    pushDB(db["version_data"], data, currentdt, "wikidata")
 
     # UPDATE FROM BREW
     print("Updating brew versions...")
+    currentdt = strftime("%d%m%H%M%S", gmtime())
     data = updateBrew()
-    f = open("brewdata.json", 'w')
-    f.write(json.dumps(data, indent='\t'))
-    f.close()
+    popDB(db["version_data"], data, "brewdata")
+    pushDB(db["version_data"], data, currentdt, "brewdata")
 
 
 if __name__ == '__main__':

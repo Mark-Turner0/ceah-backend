@@ -1,11 +1,11 @@
-import json
+import sys
+from database import getDB, readDB
 
 
 def getFiles(oper):
-    f = open("wikidata.json")
-    wiki = json.loads(f.read())
-    f = open("brewdata.json")
-    brew = json.loads(f.read())
+    db = getDB(sys.argv[1], sys.argv[2])
+    wiki = readDB(db, "wikidata")
+    brew = readDB(db, "brewdata")
 
     if oper == "windows":
         return [wiki, brew]
@@ -21,9 +21,8 @@ def versionCmp(data):
     order = getFiles(oper)
     newData = {}
     notif = []
-    f = open("known.txt", 'r')
-    ood = [line.strip() for line in f]
-    f.close()
+    db = getDB(sys.argv[1], sys.argv[2])
+    ood = readDB(db, "known_correct")["array"]
 
     for i in data.keys():
         if data[i] is False:

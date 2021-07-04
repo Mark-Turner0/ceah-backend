@@ -33,3 +33,7 @@ lint:
   script:
     - pip install flake8
     - flake8 --ignore=E501 *.py
+
+build:
+  script:
+    - docker build -t ceah-backend --secret id=DB_USERNAME --secret id=DB_PASSWORD . --no-cache

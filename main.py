@@ -1,9 +1,10 @@
 import socket
 import json
-import os
+import sys
 import _thread as thread
 from time import gmtime, strftime
 from helpers import versionCmp
+from database import getDB, pushDB
 
 
 def communicate(conn, addr):
@@ -17,25 +18,14 @@ def communicate(conn, addr):
 
         conn.send(response.encode())
         olddata = conn.recv(4096).decode()
-        print(data)
-        data = json.loads(olddata)
-        try:
-            os.mkdir("data/" + unique)
-            print("New user" + unique)
-        except FileExistsError:
-            pass
         currentdt = strftime("%d%m%H%M%S", gmtime())
-        f = open("data/" + unique + "/" + currentdt + ".json", 'w')
-        f.write(json.dumps(data, indent='\t'))
-        f.close()
+
+        data = json.loads(olddata)
         conn.send(olddata.encode())
         assert conn.recv(4096).decode() == "ACK " + unique
 
-        data, notif = versionCmp(data)
-        toSend = json.dumps(data, indent='\t')
-        f = open("data/" + unique + "/" + currentdt + "response.json", 'w')
-        f.write(toSend)
-        f.close()
+        response, notif = versionCmp(data)
+        toSend = json.dumps(response, indent='\t')
         conn.send(toSend.encode())
         assert conn.recv(4096).decode() == "ACK " + unique
 
@@ -46,6 +36,16 @@ def communicate(conn, addr):
         assert conn.recv(4096).decode() == "FIN ACK " + unique
         print("Connection with", unique, "completed successfully!")
         conn.close()
+
+        print("Pushing to database...")
+        db = getDB(sys.argv[1], sys.argv[2])
+        try:
+            pushDB(db[unique], data, currentdt, "collected_data")
+            pushDB(db[unique], response, currentdt, "reply_data")
+            pushDB(db[unique], notif, currentdt, "notif_data")
+            print("Success!")
+        except Exception as e:
+            print("Error: ", e)
 
     except AssertionError:
         print("Connection to", addr[0], "dropped due to malformed packet.")
