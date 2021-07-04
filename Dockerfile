@@ -1,3 +1,5 @@
+# syntax=docker/dockerfile:experimental
+
 FROM python:latest
 
 WORKDIR /ceah-backend

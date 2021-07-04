@@ -36,4 +36,4 @@ lint:
 
 build:
   script:
-    - docker build -t ceah-backend --secret id=DB_USERNAME --secret id=DB_PASSWORD . --no-cache
+    - DOCKER_BUILDKIT=1 docker build -t ceah-backend --secret id=DB_USERNAME --secret id=DB_PASSWORD . --no-cache
