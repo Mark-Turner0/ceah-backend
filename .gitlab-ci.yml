@@ -29,7 +29,7 @@ build docker image:
   before_script:
     - docker version
   script:
-    - DOCKER_BUILDKIT=1 docker build -t ceah-backend --secret id=DB_USERNAME --secret id=DB_PASSWORD . --no-cache
+    - docker build -t ceah-backend . --no-cache
 
 lint:
   stage: test
@@ -51,8 +51,7 @@ deploy digitalocean:
     - echo "$SSH_KNOWN_HOSTS" >> ~/.ssh/known_hosts
     - chmod 644 ~/.ssh/known_hosts
   script:
-    - ssh root@app.markturner.uk "cd ceah-backend && git pull & docker stop ceah-backend && docker rm ceah-backend && docker rmi -f ceah-backend"
-    - ssh root@app.markturner.uk DB_USERNAME=$DB_USERNAME DB_PASSWORD=$DB_PASSWORD "DOCKER_BUILDKIT=1 docker build -t ceah-backend --secret id=DB_USERNAME --secret id=DB_PASSWORD ./ceah-backend --no-cache"
+    - ssh root@app.markturner.uk "cd ceah-backend && git pull & docker stop ceah-backend && docker rm ceah-backend && docker rmi -f ceah-backend && docker build -t ceah-backend ./ceah-backend --no-cache"
     - ssh root@app.markturner.uk DB_USERNAME=$DB_USERNAME DB_PASSWORD=$DB_PASSWORD "docker run -p 1701:1701 -e DB_USERNAME=$DB_USERNAME -e DB_PASSWORD=$DB_PASSWORD -d --name ceah-backend ceah-backend"
   only:
     - master
