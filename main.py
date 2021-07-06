@@ -5,6 +5,7 @@ import _thread as thread
 from time import gmtime, strftime
 from helpers import versionCmp
 from database import getDB, pushDB
+import ssl
 
 
 def communicate(conn, addr):
@@ -29,7 +30,10 @@ def communicate(conn, addr):
         conn.send(toSend.encode())
         assert conn.recv(4096).decode() == "ACK " + unique
 
-        conn.send("\n".join(notif).encode())
+        try:
+            conn.send("\n".join(notif).encode())
+        except ssl.SSLEOFError:
+            conn.send("None".encode())
         assert conn.recv(4096).decode() == "ACK " + unique
         conn.send(str("FIN " + unique).encode())
 
@@ -53,12 +57,16 @@ def communicate(conn, addr):
 
 
 def main():
+    context = ssl.SSLContext(ssl.PROTOCOL_TLS_SERVER)
+    context.load_cert_chain('fullchain.pem', 'privkey.pem')
+
     server = socket.socket()
-    server.bind((socket.gethostname(), 1701))
+    server.bind(("0.0.0.0", 1701))
     server.listen(5)
     print("Listening...")
+    sslserver = context.wrap_socket(server, server_side=True)
     while True:
-        conn, addr = server.accept()
+        conn, addr = sslserver.accept()
         print("Inbound connection from", addr[0])
         thread.start_new_thread(communicate, (conn, addr))
 
