@@ -36,7 +36,10 @@ def versionCmp(data):
                     print(k, "is in", i)
                     latest = j[k]
                     if type(latest) == dict:
-                        latest = latest[oper]
+                        try:
+                            latest = latest[oper]
+                        except KeyError:
+                            latest = False
                     break
             if latest:
                 break

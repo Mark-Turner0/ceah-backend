@@ -18,16 +18,23 @@ def communicate(conn, addr):
         print(response)
 
         conn.send(response.encode())
-        olddata = conn.recv(4096).decode()
+        olddata = ""
+        while True:
+            buff = conn.recv(4096).decode()
+            if buff == "EOF":
+                break
+            olddata += buff
         currentdt = strftime("%d%m%H%M%S", gmtime())
 
         data = json.loads(olddata)
         conn.send(olddata.encode())
+        conn.send("EOF".encode())
         assert conn.recv(4096).decode() == "ACK " + unique
 
         response, notif = versionCmp(data)
         toSend = json.dumps(response, indent='\t')
         conn.send(toSend.encode())
+        conn.send("EOF".encode())
         assert conn.recv(4096).decode() == "ACK " + unique
 
         try:
