@@ -4,6 +4,7 @@ import urllib.request
 import ssl
 import re
 import sys
+import os
 from time import gmtime, strftime
 
 
@@ -24,6 +25,26 @@ def updateBrew():
             except KeyError:
                 data[i["name"][0].lower()] = i["version"]
     return data
+
+def updatePacman():
+    URL = "https://mirrors.gethosted.online/manjaro/repos/stable/"
+    versions = {}
+    
+    for i in ["community", "extra", "core"]:
+        os.system("curl " + URL + i + "/x86_64/" + i + ".db.tar.gz -O &>/dev/null")
+        try:
+            os.mkdir(i + ".db")
+        except FileExistsError:
+            pass
+        os.system("tar -xf " + i + ".db.tar.gz -C " + i + ".db &>/dev/null")
+        for j in os.listdir(i + ".db/"):
+            f = open(i + ".db/"  + j + "/desc")
+            description = f.read()
+            f.close()
+            name = re.search("%NAME%\n(.*)", description).groups()[0]
+            version = re.search("%VERSION%\n(.*)", description).groups()[0]
+            versions[name.lower()] = version
+    return versions
 
 
 def complexVersionGet(latest_version):
@@ -94,6 +115,7 @@ def versionGet(software):
 
 
 def main():
+
     db = getDB(sys.argv[1], sys.argv[2])
     data = readDB(db, "wikidata")
 
@@ -114,6 +136,12 @@ def main():
     popDB(db["version_data"], data, "brewdata")
     pushDB(db["version_data"], data, currentdt, "brewdata")
 
+    #UPDATE FROM PACMAN
+    print("Updating pacman versions...")
+    currentdt = strftime("%d%m%H%M%S", gmtime())
+    data = updatePacman()
+    popDB(db["version_data"], data, "pacmandata")
+    pushDB(db["version_data"], data, currentdt, "pacmandata")
 
 if __name__ == '__main__':
     main()
