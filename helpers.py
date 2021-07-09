@@ -7,12 +7,13 @@ def getFiles(oper):
     wiki = readDB(db, "wikidata")
     brew = readDB(db, "brewdata")
     pacman = readDB(db, "pacmandata")
+    choco = readDB(db, "chocodata")
 
     if oper == "windows":
-        return [wiki, brew, pacman]
+        return [choco, wiki, brew, pacman]
     elif oper == "macos":
-        return [wiki, brew, pacman]
-    return [pacman, wiki, brew]
+        return [wiki, brew, pacman, choco]
+    return [pacman, wiki, brew, choco]
 
 
 def versionCmp(data):
