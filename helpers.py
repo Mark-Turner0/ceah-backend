@@ -10,6 +10,7 @@ def search(term, oper):
         "windows": ["chocolatey"],
         "macos": ["homebrew", "homebrew_casks"],
         "linux": ["manjaro_stable"]}
+    term = term.replace(' ', '-')
     for i in REPOS[oper]:
         url = "https://repology.org/api/v1/projects/?latest=1&search=" + term + "&inrepo=" + i
         api_response = urllib.request.urlopen(url, context=ssl.SSLContext(ssl.PROTOCOL_TLS)).read().decode()
