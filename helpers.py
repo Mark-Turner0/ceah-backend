@@ -1,5 +1,29 @@
 import sys
+import ssl
+import json
+import urllib.request
 from database import getDB, readDB
+
+
+def search(term, oper):
+    REPOS = {
+        "windows": ["chocolatey"],
+        "macos": ["homebrew", "homebrew_casks"],
+        "linux": ["manjaro_stable"]}
+    for i in REPOS[oper]:
+        url = "https://repology.org/api/v1/projects/?latest=1&search=" + term + "&inrepo=" + i
+        api_response = urllib.request.urlopen(url, context=ssl.SSLContext(ssl.PROTOCOL_TLS)).read().decode()
+        api_response = json.loads(api_response)
+        try:
+            for j in api_response[term]:
+                if j["repo"] == i:
+                    return j["version"]
+        except KeyError:
+            for j in api_response.keys():
+                for k in api_response[j]:
+                    if k["repo"] == i:
+                        return k["version"]
+    return False
 
 
 def getFiles(oper):
@@ -46,6 +70,8 @@ def versionCmp(data):
             if latest:
                 break
             first = False
+        if latest is False:
+            latest = search(i, oper)
         if latest is False:
             newData[i] = False
         else:
