@@ -18,7 +18,6 @@ def communicate(conn, addr):
         print(response)
         conn.send(response.encode())
 
-        #ATTEMPTING TO CONNECT
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         s.settimeout(20)
         print("Attempting to connect...")
