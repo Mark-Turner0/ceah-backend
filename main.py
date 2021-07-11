@@ -16,8 +16,20 @@ def communicate(conn, addr):
         unique = data[-7:]
         response = "ACK " + unique
         print(response)
-
         conn.send(response.encode())
+
+        #ATTEMPTING TO CONNECT
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.settimeout(20)
+        print("Attempting to connect...")
+        try:
+            s.connect((addr[0], 1701))
+            print("No firewall detected.")
+            firewall = True
+        except (socket.timeout, ConnectionRefusedError):
+            print("Firewall / NAT detected.")
+            firewall = False
+
         olddata = ""
         while True:
             buff = conn.recv(4096).decode()
@@ -30,6 +42,11 @@ def communicate(conn, addr):
         conn.send(olddata.encode())
         conn.send("EOF".encode())
         assert conn.recv(4096).decode() == "ACK " + unique
+
+        if data["ip_addr"] != addr[0] and not firewall:
+            data["firewall"] = "NAT"
+        else:
+            data["firewall"] = firewall
 
         response, notif = versionCmp(data)
         toSend = json.dumps(response, indent='\t')

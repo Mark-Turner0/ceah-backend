@@ -42,9 +42,10 @@ def getFiles(oper):
 
 
 def versionCmp(data):
-    oper = data["os"]
-    data.pop("os")
-    data.pop("antivirus scanning")
+    oper = data.pop("os")
+    antivirus_scanning = data.pop("antivirus scanning")
+    ip_addr = data.pop("ip_addr")
+    firewall = data.pop("firewall")
     order = getFiles(oper)
     newData = {}
     notif = []
@@ -85,5 +86,9 @@ def versionCmp(data):
             else:
                 newData[i] = True
 
+    newData["os"] = oper
+    newData["antivirus scanning"] = antivirus_scanning
+    newData["ip_addr"] = ip_addr
+    newData["firewall"] = firewall
     print(newData)
     return newData, notif
