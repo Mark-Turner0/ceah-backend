@@ -5,6 +5,28 @@ import urllib.request
 from database import getDB, readDB
 
 
+def compare(found, installed):
+    if ('-' in found) ^ ('-' in installed):
+        found = found.split('-')[0]
+        installed = installed.split('-')[0]
+    found = found.split('.')
+    installed = installed.split('.')
+    for i in range(len(found)):
+        try:
+            eval_installed = ''.join(filter(str.isnumeric, installed[i]))
+        except IndexError:
+            return True
+        try:
+            eval_found = ''.join(filter(str.isnumeric, found[i]))
+        except IndexError:
+            return False
+        if int(eval_found) > int(eval_installed):
+            return True
+        elif int(eval_installed) > int(eval_found):
+            return False
+    return False
+
+
 def search(term, oper):
     REPOS = {
         "windows": ["chocolatey"],
@@ -46,6 +68,12 @@ def versionCmp(data):
     antivirus_scanning = data.pop("antivirus scanning")
     ip_addr = data.pop("ip_addr")
     firewall = data.pop("firewall")
+    firewall_enabled = data.pop("firewall_enabled")
+    root = data.pop("root")
+    try:
+        firewall_rules = data.pop("firewall_rules")
+    except KeyError:
+        firewall_rules = False
     order = getFiles(oper)
     newData = {}
     notif = []
@@ -57,10 +85,9 @@ def versionCmp(data):
             print("Version number for", i, "could not be gathered.")
             continue
         latest = False
-        first = True
         for j in order:
             for k in j.keys():
-                if (first and (k.lower() in i or i in k.lower())) or k == i:
+                if i == k:
                     print(k, "is in", i)
                     latest = j[k]
                     if type(latest) == dict:
@@ -71,14 +98,25 @@ def versionCmp(data):
                     break
             if latest:
                 break
-            first = False
+            for k in j.keys():
+                if i.lower() in k.lower().split() or k.lower() in i.lower().split():
+                    print(k, "is in", i)
+                    latest = j[k]
+                    if type(latest) == dict:
+                        try:
+                            latest = latest[oper]
+                        except KeyError:
+                            latest = False
+                    break
+            if latest:
+                break
         if latest is False:
             latest = search(i, oper)
         if latest is False:
             newData[i] = False
         else:
             print(i, ":", latest, "compared to", data[i])
-            if int(''.join(filter(str.isnumeric, latest))) > int(''.join(filter(str.isnumeric, data[i]))):
+            if compare(latest, data[i]):
                 newData[i] = latest
                 print(i)
                 if i in ood:
@@ -90,5 +128,11 @@ def versionCmp(data):
     newData["antivirus scanning"] = antivirus_scanning
     newData["ip_addr"] = ip_addr
     newData["firewall"] = firewall
+    newData["firewall_enabled"] = firewall_enabled
+    newData["root"] = root
+
+    if firewall_rules:
+        newData["firewall_rules"] = firewall_rules
+
     print(newData)
     return newData, notif
