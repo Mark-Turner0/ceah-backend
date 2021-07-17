@@ -10,24 +10,24 @@ def compare(foundorig, installedorig):
     installed = installedorig.split('-')[0]
     found = found.split('.')
     installed = installed.split('.')
-    for i in range(len(found)):
+    for i in range(max(len(found), len(installed))):
         try:
             eval_installed = ''.join(filter(str.isnumeric, installed[i]))
         except IndexError:
             try:
-                return compare(foundorig.split('-')[1], installedorig.split('-')[1])
-            except IndexError:
                 return True
+            except IndexError:
+                try:
+                    return compare(foundorig.split('-')[1], installedorig.split('-')[1])
+                except IndexError:
+                    return False
         try:
             eval_found = ''.join(filter(str.isnumeric, found[i]))
         except IndexError:
             return False
         try:
             if int(eval_found) > int(eval_installed):
-                try:
-                    return compare(foundorig.split('-')[1], installedorig.split('-')[1])
-                except IndexError:
-                    return True
+                return True
             elif int(eval_installed) > int(eval_found):
                 return False
         except ValueError:
