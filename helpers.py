@@ -35,7 +35,16 @@ def compare(foundorig, installedorig):
                 return compare(foundorig.split('-')[1], installedorig.split('-')[1])
             except IndexError:
                 return True
-    return False
+    try:
+        found = foundorig.split('-')[1]
+    except IndexError:
+        return False
+    try:
+        installed = installedorig.split('-')[1]
+    except IndexError:
+        return True
+
+    return compare(found, installed)
 
 
 def search(term, oper):
