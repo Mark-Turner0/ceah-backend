@@ -1,4 +1,4 @@
-from database import getDB, pushDB, popDB, readDB
+from database import getDB, pushDB, popDB
 import json
 import urllib.request
 import ssl
@@ -155,15 +155,15 @@ def main():
     pushDB(db["version_data"], data, currentdt, "chocodata")
 
     # UPDATE FROM WIKIPEDIA
-   # data = readDB(db, "wikidata")
-   # print("Updating Wikipedia versions...")
-   # currentdt = strftime("%d%m%H%M%S", gmtime())
-   # for i in data.keys():
-   #     software = i.title() if i.islower() else i
-   #     data[i] = versionGet(software.replace(' ', '_'))
+    # data = readDB(db, "wikidata")
+    # print("Updating Wikipedia versions...")
+    # currentdt = strftime("%d%m%H%M%S", gmtime())
+    # for i in data.keys():
+    #     software = i.title() if i.islower() else i
+    #     data[i] = versionGet(software.replace(' ', '_'))
 
-   # popDB(db["version_data"], data, "wikidata")
-   # pushDB(db["version_data"], data, currentdt, "wikidata")
+    # popDB(db["version_data"], data, "wikidata")
+    # pushDB(db["version_data"], data, currentdt, "wikidata")
 
     # UPDATE FROM BREW
     print("Updating brew versions...")
