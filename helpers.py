@@ -139,10 +139,10 @@ def versionCmp(data):
             if compare(latest, data[i]):
                 newData[i] = latest
                 print(i)
-            try:
-                notif[i] = known_correct[i.replace(".", "-")]
-            except KeyError:
-                pass
+                try:
+                    notif[i] = known_correct[i.replace(".", "-")]
+                except KeyError:
+                    pass
             else:
                 newData[i] = True
 
