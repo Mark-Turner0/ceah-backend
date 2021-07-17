@@ -140,7 +140,7 @@ def versionCmp(data):
                 newData[i] = latest
                 print(i)
             try:
-                notif[i] = known_correct[i.replace(".","-")]
+                notif[i] = known_correct[i.replace(".", "-")]
             except KeyError:
                 pass
             else:
