@@ -6,6 +6,7 @@ import re
 import sys
 import os
 from time import gmtime, strftime
+from helpers import compare
 
 
 def updateBrew():
@@ -28,7 +29,7 @@ def updateBrew():
 
 
 def updatePacman():
-    URL = "https://mirrors.gethosted.online/manjaro/repos/stable/"
+    URL = "http://manjaro.mirrors.uk2.net/stable/"
     versions = {}
 
     for i in ["community", "extra", "core"]:
@@ -44,7 +45,11 @@ def updatePacman():
             f.close()
             name = re.search("%NAME%\n(.*)", description).groups()[0]
             version = re.search("%VERSION%\n(.*)", description).groups()[0]
-            versions[name.lower()] = version
+            try:
+                if compare(version, versions[name.lower()]):
+                    versions[name.lower()] = version
+            except KeyError:
+                versions[name.lower()] = version
     return versions
 
 
@@ -83,15 +88,20 @@ def complexVersionGet(latest_version):
 
     api_response = json.loads(api_response)["claims"]["P348"]
     for i in range(len(api_response)):
-        if api_response[i]["qualifiers"]["P548"][0]["datavalue"]["value"]["id"] == STABLE_RELEASE:
+        print(api_response[i]["qualifiers"])
+        try:
+            if api_response[i]["qualifiers"]["P548"][0]["datavalue"]["value"]["id"] == STABLE_RELEASE:
+                vers = {}
+                try:
+                    for j in api_response[i]["qualifiers"]["P400"]:
+                        vers[ALIASES[j["datavalue"]["value"]["id"]]] = api_response[i]["mainsnak"]["datavalue"]["value"]
+                except KeyError:
+                    if i == len(api_response) - 1:
+                        return api_response[i]["mainsnak"]["datavalue"]["value"]
+                    continue
+        except KeyError:
             vers = {}
-            try:
-                for j in api_response[i]["qualifiers"]["P400"]:
-                    vers[ALIASES[j["datavalue"]["value"]["id"]]] = api_response[i]["mainsnak"]["datavalue"]["value"]
-            except KeyError:
-                if i == len(api_response) - 1:
-                    return api_response[i]["mainsnak"]["datavalue"]["value"]
-                continue
+            continue
     if len(vers) == 1:
         return list(vers.values())[0]
     return vers
@@ -138,22 +148,22 @@ def main():
     db = getDB(sys.argv[1], sys.argv[2])
 
     # UPDATE FROM REPOLOGY
-    print("Updating Chocolatey...`")
+    print("Updating Chocolatey...")
     currentdt = strftime("%d%m%H%M%S", gmtime())
     data = updateChocolatey()
     popDB(db["version_data"], data, "chocodata")
     pushDB(db["version_data"], data, currentdt, "chocodata")
 
     # UPDATE FROM WIKIPEDIA
-    data = readDB(db, "wikidata")
-    print("Updating Wikipedia versions...")
-    currentdt = strftime("%d%m%H%M%S", gmtime())
-    for i in data.keys():
-        software = i.title() if i.islower() else i
-        data[i] = versionGet(software.replace(' ', '_'))
+   # data = readDB(db, "wikidata")
+   # print("Updating Wikipedia versions...")
+   # currentdt = strftime("%d%m%H%M%S", gmtime())
+   # for i in data.keys():
+   #     software = i.title() if i.islower() else i
+   #     data[i] = versionGet(software.replace(' ', '_'))
 
-    popDB(db["version_data"], data, "wikidata")
-    pushDB(db["version_data"], data, currentdt, "wikidata")
+   # popDB(db["version_data"], data, "wikidata")
+   # pushDB(db["version_data"], data, currentdt, "wikidata")
 
     # UPDATE FROM BREW
     print("Updating brew versions...")

@@ -5,25 +5,36 @@ import urllib.request
 from database import getDB, readDB
 
 
-def compare(found, installed):
-    if ('-' in found) ^ ('-' in installed):
-        found = found.split('-')[0]
-        installed = installed.split('-')[0]
+def compare(foundorig, installedorig):
+    found = foundorig.split('-')[0]
+    installed = installedorig.split('-')[0]
     found = found.split('.')
     installed = installed.split('.')
     for i in range(len(found)):
         try:
             eval_installed = ''.join(filter(str.isnumeric, installed[i]))
         except IndexError:
-            return True
+            try:
+                return compare(foundorig.split('-')[1], installedorig.split('-')[1])
+            except IndexError:
+                return True
         try:
             eval_found = ''.join(filter(str.isnumeric, found[i]))
         except IndexError:
             return False
-        if int(eval_found) > int(eval_installed):
-            return True
-        elif int(eval_installed) > int(eval_found):
-            return False
+        try:
+            if int(eval_found) > int(eval_installed):
+                try:
+                    return compare(foundorig.split('-')[1], installedorig.split('-')[1])
+                except IndexError:
+                    return True
+            elif int(eval_installed) > int(eval_found):
+                return False
+        except ValueError:
+            try:
+                return compare(foundorig.split('-')[1], installedorig.split('-')[1])
+            except IndexError:
+                return True
     return False
 
 
@@ -51,16 +62,16 @@ def search(term, oper):
 
 def getFiles(oper):
     db = getDB(sys.argv[1], sys.argv[2])
-    wiki = readDB(db, "wikidata")
+    # wiki = readDB(db, "wikidata")
     brew = readDB(db, "brewdata")
     pacman = readDB(db, "pacmandata")
     choco = readDB(db, "chocodata")
 
     if oper == "windows":
-        return [choco, wiki, brew, pacman]
+        return [choco, brew, pacman]
     elif oper == "macos":
-        return [wiki, brew, pacman, choco]
-    return [pacman, wiki, brew, choco]
+        return [brew, pacman, choco]
+    return [pacman, brew, choco]
 
 
 def versionCmp(data):
