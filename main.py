@@ -53,10 +53,9 @@ def communicate(conn, addr):
         conn.send("EOF".encode())
         assert conn.recv(4096).decode() == "ACK " + unique
 
-        try:
-            conn.send("\n".join(notif).encode())
-        except ssl.SSLEOFError:
-            conn.send("None".encode())
+        toSend = json.dumps(notif, indent='\t')
+        conn.send(toSend.encode())
+        conn.send("EOF".encode())
         assert conn.recv(4096).decode() == "ACK " + unique
         conn.send(str("FIN " + unique).encode())
 

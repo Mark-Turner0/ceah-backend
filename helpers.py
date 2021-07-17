@@ -96,9 +96,9 @@ def versionCmp(data):
         firewall_rules = False
     order = getFiles(oper)
     newData = {}
-    notif = []
+    notif = {}
     db = getDB(sys.argv[1], sys.argv[2])
-    ood = readDB(db, "known_correct")["array"]
+    known_correct = readDB(db, "known_correct")
 
     for i in data.keys():
         if data[i] is False:
@@ -139,8 +139,10 @@ def versionCmp(data):
             if compare(latest, data[i]):
                 newData[i] = latest
                 print(i)
-                if i in ood:
-                    notif.append(i)
+            try:
+                notif[i] = known_correct[i.replace(".","-")]
+            except KeyError:
+                pass
             else:
                 newData[i] = True
 
