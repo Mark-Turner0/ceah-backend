@@ -84,7 +84,7 @@ def getFiles(oper):
 
 
 def notif_parse(notification, unique):
-    if len(notification) > 0:
+    if notification != False:
         db = getDB(sys.argv[1], sys.argv[2])
         try:
             current = readDB(db[unique]["notif_data"])
