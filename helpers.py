@@ -71,10 +71,10 @@ def search(term, oper):
 
 def getFiles(oper):
     db = getDB(sys.argv[1], sys.argv[2])
-    # wiki = readDB(db, "wikidata")
-    brew = readDB(db, "brewdata")
-    pacman = readDB(db, "pacmandata")
-    choco = readDB(db, "chocodata")
+    # wiki = readDB(db["version_data"]["wikidata"])
+    brew = readDB(db["version_data"]["brewdata"])
+    pacman = readDB(db["version_data"]["pacmandata"])
+    choco = readDB(db["version_data"]["chocodata"])
 
     if oper == "windows":
         return [choco, brew, pacman]
@@ -83,22 +83,32 @@ def getFiles(oper):
     return [pacman, brew, choco]
 
 
-def versionCmp(data):
-    oper = data.pop("os")
-    antivirus_scanning = data.pop("antivirus scanning")
-    ip_addr = data.pop("ip_addr")
-    firewall = data.pop("firewall")
-    firewall_enabled = data.pop("firewall_enabled")
-    root = data.pop("root")
-    try:
-        firewall_rules = data.pop("firewall_rules")
-    except KeyError:
-        firewall_rules = False
+def notif_parse(notification, unique):
+    if len(notification) > 0:
+        db = getDB(sys.argv[1], sys.argv[2])
+        try:
+            current = readDB(db[unique]["notif_data"])
+        except IndexError:
+            current = {}
+        try:
+            current[notification[0]]
+        except KeyError:
+            current[notification[0]] = {
+                "shown": 0,
+                "clicked": 0,
+                "dismissed": 0}
+        current[notification[0]]["shown"] += 1
+        if len(notification) > 1:
+            current[notification[0]][notification[1]] += 1
+        return current
+
+
+def versionCmp(data, oper):
     order = getFiles(oper)
     newData = {}
     notif = {}
     db = getDB(sys.argv[1], sys.argv[2])
-    known_correct = readDB(db, "known_correct")
+    known_correct = readDB(db["version_data"]["known_correct"])
 
     for i in data.keys():
         if data[i] is False:
@@ -146,15 +156,4 @@ def versionCmp(data):
             else:
                 newData[i] = True
 
-    newData["os"] = oper
-    newData["antivirus scanning"] = antivirus_scanning
-    newData["ip_addr"] = ip_addr
-    newData["firewall"] = firewall
-    newData["firewall_enabled"] = firewall_enabled
-    newData["root"] = root
-
-    if firewall_rules:
-        newData["firewall_rules"] = firewall_rules
-
-    print(newData)
     return newData, notif

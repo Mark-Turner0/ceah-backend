@@ -20,8 +20,8 @@ def pushDB(db, data, currentdt, name):
         db[name].insert_one(sanitdata)
 
 
-def readDB(db, name):
-    data = db["version_data"][name].find()[0]
+def readDB(db):
+    data = db.find().limit(1).sort([("$natural", -1)])[0]
     data.pop("_id")
     data.pop("timestamp")
     return data

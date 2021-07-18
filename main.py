@@ -3,7 +3,7 @@ import json
 import sys
 import _thread as thread
 from time import gmtime, strftime
-from helpers import versionCmp
+from helpers import versionCmp, notif_parse
 from database import getDB, pushDB
 import ssl
 
@@ -47,7 +47,35 @@ def communicate(conn, addr):
         else:
             data["firewall"] = firewall
 
-        response, notif = versionCmp(data)
+        oper = data.pop("os")
+        antivirus_scanning = data.pop("antivirus scanning")
+
+        ip_addr = data.pop("ip_addr")
+        firewall = data.pop("firewall")
+        firewall_enabled = data.pop("firewall_enabled")
+        root = data.pop("root")
+        notification = data.pop("notification")
+        try:
+            firewall_rules = data.pop("firewall_rules")
+        except KeyError:
+            firewall_rules = False
+
+        response, notif = versionCmp(data, oper)
+        notification = notif_parse(notification, unique)
+
+        response["os"] = oper
+        response["antivirus scanning"] = antivirus_scanning
+        response["ip_addr"] = ip_addr
+        response["firewall"] = firewall
+        response["firewall_enabled"] = firewall_enabled
+        response["root"] = root
+        response["notif"] = notif
+
+        if firewall_rules:
+            response["firewall_rules"] = firewall_rules
+
+        print(notification)
+
         toSend = json.dumps(response, indent='\t')
         conn.send(toSend.encode())
         conn.send("EOF".encode())
@@ -68,7 +96,7 @@ def communicate(conn, addr):
         try:
             pushDB(db[unique], data, currentdt, "collected_data")
             pushDB(db[unique], response, currentdt, "reply_data")
-            pushDB(db[unique], notif, currentdt, "notif_data")
+            pushDB(db[unique], notification, currentdt, "notif_data")
             print("Success!")
         except Exception as e:
             print("Error: ", e)
