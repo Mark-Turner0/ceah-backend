@@ -84,12 +84,12 @@ def getFiles(oper):
 
 
 def notif_parse(notification, unique):
-    if notification != False:
-        db = getDB(sys.argv[1], sys.argv[2])
-        try:
-            current = readDB(db[unique]["notif_data"])
-        except IndexError:
-            current = {}
+    db = getDB(sys.argv[1], sys.argv[2])
+    try:
+        current = readDB(db[unique]["notif_data"])
+    except IndexError:
+        current = {}
+    if notification is not False:
         try:
             current[notification[0]]
         except KeyError:
@@ -100,7 +100,7 @@ def notif_parse(notification, unique):
         current[notification[0]]["shown"] += 1
         if len(notification) > 1:
             current[notification[0]][notification[1]] += 1
-        return current
+    return current
 
 
 def versionCmp(data, oper):
