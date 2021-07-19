@@ -14,6 +14,11 @@ def communicate(conn, addr):
         assert data.startswith("SYN")
         print(data)
         unique = data[-7:]
+
+        db = getDB(sys.argv[1], sys.argv[2])
+        if unique not in db.list_database_names():
+            raise ValueError
+
         response = "ACK " + unique
         print(response)
         conn.send(response.encode())
@@ -92,7 +97,6 @@ def communicate(conn, addr):
         conn.close()
 
         print("Pushing to database...")
-        db = getDB(sys.argv[1], sys.argv[2])
         try:
             pushDB(db[unique], data, currentdt, "collected_data")
             pushDB(db[unique], response, currentdt, "reply_data")
@@ -103,6 +107,11 @@ def communicate(conn, addr):
 
     except AssertionError:
         print("Connection to", addr[0], "dropped due to malformed packet.")
+        conn.close()
+    except ValueError:
+        response = "KNACK " + unique
+        print(response)
+        conn.send(response.encode())
         conn.close()
 
 
