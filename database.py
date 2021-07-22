@@ -11,13 +11,15 @@ def getDB(username, password):
 
 def pushDB(db, data, currentdt, name):
     sanitdata = {"timestamp": currentdt}
-    try:
-        for i in data.keys():
-            sanitdata[i.replace(".", "-")] = data[i]
-        db[name].insert_one(sanitdata)
-    except AttributeError:
-        sanitdata["notified"] = data
-        db[name].insert_one(sanitdata)
+    for i in data.keys():
+        if type(data[i]) == dict:
+            temp = {}
+            for j in data[i].keys():
+                temp[j.replace('.', '-')] = data[i][j]
+            sanitdata[i.replace('.', '-')] = temp
+        else:
+            sanitdata[i .replace('.', '-')] = data[i]
+    db[name].insert_one(sanitdata)
 
 
 def readDB(db):

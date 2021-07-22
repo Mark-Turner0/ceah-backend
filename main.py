@@ -52,32 +52,20 @@ def communicate(conn, addr):
         else:
             data["firewall"] = firewall
 
-        oper = data.pop("os")
-        antivirus_scanning = data.pop("antivirus scanning")
+        oper = data["os"]
+        response = {}
+        notification = notif_parse(data["notification"], unique)
 
-        ip_addr = data.pop("ip_addr")
-        firewall = data.pop("firewall")
-        firewall_enabled = data.pop("firewall_enabled")
-        root = data.pop("root")
-        notification = data.pop("notification")
-        try:
-            firewall_rules = data.pop("firewall_rules")
-        except KeyError:
-            firewall_rules = False
-
-        response, notif = versionCmp(data, oper)
-        notification = notif_parse(notification, unique)
-
+        response["software"], notif = versionCmp(data["software"], oper)
         response["os"] = oper
-        response["antivirus scanning"] = antivirus_scanning
-        response["ip_addr"] = ip_addr
-        response["firewall"] = firewall
-        response["firewall_enabled"] = firewall_enabled
-        response["root"] = root
+        response["antivirus_scanning"] = data["antivirus_scanning"]
+        response["firewall"] = data["firewall"]
+        response["firewall_enabled"] = data["firewall_enabled"]
+        response["firewall_rules"] = data["firewall_rules"]
+        response["root"] = data["root"]
+        response["UAC"] = data["UAC"]
+        response["processes"] = data["processes"]
         response["notif"] = notif
-
-        if firewall_rules:
-            response["firewall_rules"] = firewall_rules
 
         print(notification)
 
@@ -125,9 +113,12 @@ def main():
     print("Listening...")
     sslserver = context.wrap_socket(server, server_side=True)
     while True:
-        conn, addr = sslserver.accept()
-        print("Inbound connection from", addr[0])
-        thread.start_new_thread(communicate, (conn, addr))
+        try:
+            conn, addr = sslserver.accept()
+            print("Inbound connection from", addr[0])
+            thread.start_new_thread(communicate, (conn, addr))
+        except ConnectionResetError:
+            continue
 
 
 if __name__ == '__main__':
