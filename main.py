@@ -29,10 +29,10 @@ def communicate(conn, addr):
         try:
             s.connect((addr[0], 1701))
             print("No firewall detected.")
-            firewall = True
+            firewall = False
         except (socket.timeout, ConnectionRefusedError):
             print("Firewall / NAT detected.")
-            firewall = False
+            firewall = True
 
         olddata = ""
         while True:
@@ -60,14 +60,28 @@ def communicate(conn, addr):
         response["os"] = oper
         response["osVer"] = versionCmpOS(oper, data["osVer"])
         if not response["osVer"]:
+            print("osVer failed")
             notif = addNotif(notif, "osVer")
         response["antivirus_scanning"] = data["antivirus_scanning"]
+        if response["antivirus_scanning"] == "failed":
+            print("Antivirus failed")
+            notif = addNotif(notif, "antivirus_scanning")
         response["firewall"] = data["firewall"]
         response["firewall_enabled"] = data["firewall_enabled"]
+        print("Firewall:", response["firewall"])
+        if not response["firewall_enabled"] or not response["firewall"]:
+            print("Firewall not enabled")
+            notif = addNotif(notif, "firewall_enabled")
         response["firewall_rules"] = data["firewall_rules"]
+        if not response["firewall_rules"] and response["firewall_enabled"]:
+            print("Firewall misconfigured")
+            notif = addNotif(notif, "firewall_rules")
         response["root"] = data["root"]
         response["UAC"] = data["UAC"]
         response["processes"] = data["processes"]
+        if not response["UAC"] or not response["processes"]:
+            notif = addNotif(notif, "access controls")
+            print("Access controls misconfigured")
         response["notif"] = notif
 
         print(notification)
