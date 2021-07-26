@@ -155,12 +155,13 @@ def versionCmp(data, oper):
 
     return newData, notif
 
+
 def versionCmpOS(oper, osVer):
     if oper == "macos":
         rss = feedparser.parse("https://developer.apple.com/news/releases/rss/releases.rss")["entries"]
         for i in rss:
             if "macOS" in i["title"] and "beta" not in i["title"]:
-                latest = re.search("\((.*)\)", i["title"]).groups()[0]
+                latest = re.search("\((.*)\)", i["title"]).groups()[0]  # noqa: W605
                 print(latest)
                 if osVer != latest:
                     return False
@@ -170,13 +171,14 @@ def versionCmpOS(oper, osVer):
         rss = feedparser.parse("https://support.microsoft.com/en-us/feed/rss/6ae59d69-36fc-8e4d-23dd-631d98bf74a9")["entries"]
         for i in rss:
             if "OS Build" in i["title"] and "Preview" not in i["title"]:
-                latest = re.search("(\d*\.\d*)", i["title"]).groups()
+                latest = re.search("(\d*\.\d*)", i["title"]).groups()  # noqa: W605
                 print(latest)
                 if osVer not in latest:
                     return False
                 return True
         return True
     return True
+
 
 def addNotif(notif, toAdd):
     db = getDB(sys.argv[1], sys.argv[2])
