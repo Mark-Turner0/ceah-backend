@@ -3,7 +3,7 @@ import json
 import sys
 import _thread as thread
 from time import gmtime, strftime
-from helpers import versionCmp, notif_parse
+from helpers import versionCmp, notif_parse, versionCmpOS, addNotif
 from database import getDB, pushDB
 import ssl
 
@@ -58,6 +58,9 @@ def communicate(conn, addr):
 
         response["software"], notif = versionCmp(data["software"], oper)
         response["os"] = oper
+        response["osVer"] = versionCmpOS(oper, data["osVer"])
+        if not response["osVer"]:
+            notif = addNotif(notif, "osVer")
         response["antivirus_scanning"] = data["antivirus_scanning"]
         response["firewall"] = data["firewall"]
         response["firewall_enabled"] = data["firewall_enabled"]
@@ -117,7 +120,7 @@ def main():
             conn, addr = sslserver.accept()
             print("Inbound connection from", addr[0])
             thread.start_new_thread(communicate, (conn, addr))
-        except ConnectionResetError:
+        except (ConnectionResetError, ssl.SSLEOFError):
             continue
 
 

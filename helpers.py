@@ -1,7 +1,9 @@
+import re
 import sys
 import ssl
 import json
 import urllib.request
+import feedparser
 from database import getDB, readDB
 
 
@@ -107,8 +109,6 @@ def versionCmp(data, oper):
     order = getFiles(oper)
     newData = {}
     notif = {}
-    db = getDB(sys.argv[1], sys.argv[2])
-    known_correct = readDB(db["version_data"]["known_correct"])
 
     for i in data.keys():
         if data[i] is False:
@@ -148,12 +148,41 @@ def versionCmp(data, oper):
             print(i, ":", latest, "compared to", data[i])
             if compare(latest, data[i]):
                 newData[i] = latest
+                notif = addNotif(notif, i)
                 print(i)
-                try:
-                    notif[i] = known_correct[i.replace(".", "-")]
-                except KeyError:
-                    pass
             else:
                 newData[i] = True
 
     return newData, notif
+
+def versionCmpOS(oper, osVer):
+    if oper == "macos":
+        rss = feedparser.parse("https://developer.apple.com/news/releases/rss/releases.rss")["entries"]
+        for i in rss:
+            if "macOS" in i["title"] and "beta" not in i["title"]:
+                latest = re.search("\((.*)\)", i["title"]).groups()[0]
+                print(latest)
+                if osVer != latest:
+                    return False
+                return True
+        return True
+    elif oper == "windows":
+        rss = feedparser.parse("https://support.microsoft.com/en-us/feed/rss/6ae59d69-36fc-8e4d-23dd-631d98bf74a9")["entries"]
+        for i in rss:
+            if "OS Build" in i["title"] and "Preview" not in i["title"]:
+                latest = re.search("(\d*\.\d*)", i["title"]).groups()
+                print(latest)
+                if osVer not in latest:
+                    return False
+                return True
+        return True
+    return True
+
+def addNotif(notif, toAdd):
+    db = getDB(sys.argv[1], sys.argv[2])
+    known_correct = readDB(db["version_data"]["known_correct"])
+    try:
+        notif[toAdd] = known_correct[toAdd.replace(".", "-")]
+    except KeyError:
+        pass
+    return notif
