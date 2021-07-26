@@ -185,9 +185,13 @@ def addNotif(notif, toAdd, software=False):
     known_correct = readDB(db["version_data"]["known_correct"])
     try:
         if toAdd == "positive":
-            known_correct[software.replace(".", "-")]
-            print("Positive", software)
-            notif["positive"] = software
+            if software in ["osVer", "antivirus_scanning", "firewall_enabled"]:
+                print("Positive", software)
+                notif["positive"] = software
+            else:
+                known_correct[software.replace(".", "-")]
+                print("Positive", software)
+                notif["positive"] = software
         else:
             notif[toAdd] = known_correct[toAdd.replace(".", "-")]
     except KeyError:

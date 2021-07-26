@@ -88,7 +88,6 @@ def communicate(conn, addr):
             print("Access controls misconfigured")
 
         changed = diff(db[unique], response)
-        response["notif"] = notif
         print(changed)
         try:
             pool = []
@@ -97,12 +96,20 @@ def communicate(conn, addr):
                     pool.append(i)
             software = random.choice(pool)
             print("Randomly chosen", software)
-            response["notif"] = addNotif(notif, "positive", software)
+            notif = addNotif(notif, "positive", software)
         except KeyError:
             print("No new software.")
         except IndexError:
             print("None of the changed software has been updated")
 
+        if "osVer" in changed and changed["osVer"] == True:
+            notif = addNotif(notif, "postive", "osVer")
+        if "firewall_enabled" in changed and changed["firewall_enabled"] == True:
+            notif = addNotif(notif, "positive", "firewall_enabled")
+        if "antivirus_scanning" in changed and changed["antivirus_scanning"] != "failed":
+            notif = addNotif(notif, "positive", "antivirus_scanning")
+
+        response["notif"] = notif
         toSend = json.dumps(response, indent='\t')
         conn.send(toSend.encode())
         conn.send("EOF".encode())
