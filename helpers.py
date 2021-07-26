@@ -171,11 +171,11 @@ def versionCmpOS(oper, osVer):
         rss = feedparser.parse("https://support.microsoft.com/en-us/feed/rss/6ae59d69-36fc-8e4d-23dd-631d98bf74a9")["entries"]
         for i in rss:
             if "OS Build" in i["title"] and "Preview" not in i["title"]:
-                latest = re.search("(\d*\.\d*)", i["title"]).groups()  # noqa: W605
-                print(latest)
-                if osVer not in latest:
-                    return False
-                return True
+                latest = re.findall("(\d*\.\d*)", i["title"])  # noqa: W605
+                for j in latest:
+                    if j in osVer:
+                        return True
+                return False
         return True
     return True
 
