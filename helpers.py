@@ -180,11 +180,57 @@ def versionCmpOS(oper, osVer):
     return True
 
 
-def addNotif(notif, toAdd):
+def addNotif(notif, toAdd, software=False):
     db = getDB(sys.argv[1], sys.argv[2])
     known_correct = readDB(db["version_data"]["known_correct"])
     try:
-        notif[toAdd] = known_correct[toAdd.replace(".", "-")]
+        if toAdd == "positive":
+            known_correct[software.replace(".", "-")]
+            print("Positive", software)
+            notif["positive"] = software
+        else:
+            notif[toAdd] = known_correct[toAdd.replace(".", "-")]
     except KeyError:
         pass
     return notif
+
+
+def parseFirewall(config, oper):
+    return True
+
+
+def parseUAC(uac):
+    return True
+
+
+def parseProc(processes, oper):
+    return True
+
+
+def diff(db, new, depth=False):
+    sanitnew = {}
+    try:
+        current = readDB(db["reply_data"]) if not depth else depth
+    except IndexError:
+        return new
+    for i in new.keys():
+        sanitnew[i.replace('.', '-')] = new[i]
+    for i in current.keys():
+        if i == "notif":
+            continue
+        try:
+            if current[i] == sanitnew[i]:
+                sanitnew.pop(i)
+                print(i, "unchanged")
+            else:
+                if type(sanitnew[i]) == dict:
+                    sanitnew[i] = diff(db, sanitnew[i], current[i])
+                    if sanitnew[i] == {}:
+                        sanitnew.pop(i)
+        except KeyError:
+            sanitnew[i] = "removed"
+            print(i, "removed")
+    for i in sanitnew.keys():
+        if i not in current:
+            sanitnew[i] = "new"
+    return sanitnew

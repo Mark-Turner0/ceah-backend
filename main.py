@@ -1,9 +1,10 @@
 import socket
 import json
 import sys
+import random
 import _thread as thread
 from time import gmtime, strftime
-from helpers import versionCmp, notif_parse, versionCmpOS, addNotif
+from helpers import versionCmp, notif_parse, versionCmpOS, addNotif, parseFirewall, parseUAC, parseProc, diff
 from database import getDB, pushDB
 import ssl
 
@@ -72,19 +73,35 @@ def communicate(conn, addr):
         if not response["firewall_enabled"] or not response["firewall"]:
             print("Firewall not enabled")
             notif = addNotif(notif, "firewall_enabled")
-        response["firewall_rules"] = data["firewall_rules"]
+        response["firewall_rules"] = parseFirewall(data["firewall_rules"], oper)
         if not response["firewall_rules"] and response["firewall_enabled"]:
             print("Firewall misconfigured")
             notif = addNotif(notif, "firewall_rules")
         response["root"] = data["root"]
-        response["UAC"] = data["UAC"]
-        response["processes"] = data["processes"]
+        if response["root"]:
+            print("Running program as root/admin!")
+            notif = addNotif(notif, "root")
+        response["UAC"] = parseUAC(data["UAC"])
+        response["processes"] = parseProc(data["processes"], oper)
         if not response["UAC"] or not response["processes"]:
             notif = addNotif(notif, "access controls")
             print("Access controls misconfigured")
-        response["notif"] = notif
 
-        print(notification)
+        changed = diff(db[unique], response)
+        response["notif"] = notif
+        print(changed)
+        try:
+            pool = []
+            for i in changed["software"].keys():
+                if changed["software"][i] is True:
+                    pool.append(i)
+            software = random.choice(pool)
+            print("Randomly chosen", software)
+            response["notif"] = addNotif(notif, "positive", software)
+        except KeyError:
+            print("No new software.")
+        except IndexError:
+            print("None of the changed software has been updated")
 
         toSend = json.dumps(response, indent='\t')
         conn.send(toSend.encode())
@@ -104,6 +121,7 @@ def communicate(conn, addr):
         print("Pushing to database...")
         try:
             pushDB(db[unique], data, currentdt, "collected_data")
+            pushDB(db[unique], changed, currentdt, "diff_data")
             pushDB(db[unique], response, currentdt, "reply_data")
             pushDB(db[unique], notification, currentdt, "notif_data")
             print("Success!")
@@ -125,7 +143,12 @@ def main():
     context.load_cert_chain('fullchain.pem', 'privkey.pem')
 
     server = socket.socket()
-    server.bind(("0.0.0.0", 1701))
+    while True:
+        try:
+            server.bind(("0.0.0.0", 1701))
+            break
+        except OSError:
+            continue
     server.listen(5)
     print("Listening...")
     sslserver = context.wrap_socket(server, server_side=True)
@@ -134,7 +157,7 @@ def main():
             conn, addr = sslserver.accept()
             print("Inbound connection from", addr[0])
             thread.start_new_thread(communicate, (conn, addr))
-        except (ConnectionResetError, ssl.SSLEOFError):
+        except Exception:
             continue
 
 
