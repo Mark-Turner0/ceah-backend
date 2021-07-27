@@ -14,7 +14,7 @@ def communicate(conn, addr):
     try:
         assert data.startswith("SYN")
         print(data)
-        unique = data[-7:]
+        unique = data[-10:]
 
         db = getDB(sys.argv[1], sys.argv[2])
         if unique not in db.list_database_names():
