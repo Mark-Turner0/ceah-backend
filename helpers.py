@@ -192,6 +192,8 @@ def addNotif(notif, toAdd, software=False):
                 known_correct[software.replace(".", "-")]
                 print("Positive", software)
                 notif["positive"] = software
+        elif toAdd == "access controls":
+            notif["access controls"] = software
         else:
             notif[toAdd] = known_correct[toAdd.replace(".", "-")]
     except KeyError:
@@ -207,7 +209,11 @@ def parseUAC(uac):
     return True
 
 
-def parseProc(processes, oper):
+def parseProc(processes, db):
+    blacklist = readDB(db["version_data"]["blacklist"])
+    for procname in processes.keys():
+        if procname.replace('.', '-') in blacklist and processes[procname] in ["root", "UAC Elevated"]:
+            return procname
     return True
 
 

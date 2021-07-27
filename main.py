@@ -82,10 +82,13 @@ def communicate(conn, addr):
             print("Running program as root/admin!")
             notif = addNotif(notif, "root")
         response["UAC"] = parseUAC(data["UAC"])
-        response["processes"] = parseProc(data["processes"], oper)
-        if not response["UAC"] or not response["processes"]:
-            notif = addNotif(notif, "access controls")
+        response["processes"] = parseProc(data["processes"], db)
+        if response["processes"] is not True:
+            notif = addNotif(notif, "access controls", response["processes"])
             print("Access controls misconfigured")
+        if not response["UAC"]:
+            notif = addNotif(notif, "UAC")
+            print("UAC misconfigured")
 
         changed = diff(db[unique], response)
         print(changed)
