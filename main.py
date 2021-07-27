@@ -103,7 +103,7 @@ def communicate(conn, addr):
             print("None of the changed software has been updated")
 
         if "osVer" in changed and changed["osVer"] is True:
-            notif = addNotif(notif, "postive", "osVer")
+            notif = addNotif(notif, "positive", "osVer")
         if "firewall_enabled" in changed and changed["firewall_enabled"] is True:
             notif = addNotif(notif, "positive", "firewall_enabled")
         if "antivirus_scanning" in changed and changed["antivirus_scanning"] != "failed":
