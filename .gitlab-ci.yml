@@ -51,7 +51,7 @@ deploy digitalocean:
     - echo "$SSH_KNOWN_HOSTS" >> ~/.ssh/known_hosts
     - chmod 644 ~/.ssh/known_hosts
   script:
-    - ssh root@app.markturner.uk "cd ceah-backend && git pull & sh ceah-backend/build.sh"
+    - ssh root@app.markturner.uk "cd ceah-backend && git stash && cd ceah-backend && git pull && sh ceah-backend/build.sh"
     - ssh root@app.markturner.uk DB_USERNAME=$DB_USERNAME DB_PASSWORD=$DB_PASSWORD "docker run -p 1701:1701 -e DB_USERNAME=$DB_USERNAME -e DB_PASSWORD=$DB_PASSWORD -d --name ceah-backend ceah-backend"
   only:
     - master
