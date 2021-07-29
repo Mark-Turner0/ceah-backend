@@ -206,6 +206,13 @@ def parseFirewall(config, oper):
 
 
 def parseUAC(uac):
+    try:
+        if uac["ConsentPromptBehaviourAdmin"] < 2:
+            return False
+        if uac["PromptOnSecureDesktop"] != 1:
+            return False
+    except (AttributeError, KeyError):
+        pass
     return True
 
 
