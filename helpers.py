@@ -250,4 +250,6 @@ def diff(db, new, depth=False):
     for i in sanitnew.keys():
         if i not in current:
             sanitnew[i] = "new"
+        if i == "antivirus_scanning" and current[i] != "failed":
+            sanitnew[i] = "ignore " + current[i]
     return sanitnew

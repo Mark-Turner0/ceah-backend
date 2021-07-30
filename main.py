@@ -109,7 +109,7 @@ def communicate(conn, addr):
             notif = addNotif(notif, "positive", "osVer")
         if "firewall_enabled" in changed and changed["firewall_enabled"] is True:
             notif = addNotif(notif, "positive", "firewall_enabled")
-        if "antivirus_scanning" in changed and changed["antivirus_scanning"] != "failed":
+        if "antivirus_scanning" in changed and changed["antivirus_scanning"] != "failed" and "ignore" not in changed["antivirus_scanning"]:
             notif = addNotif(notif, "positive", "antivirus_scanning")
 
         response["notif"] = notif
