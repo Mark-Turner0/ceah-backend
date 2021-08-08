@@ -170,7 +170,7 @@ def versionCmpOS(oper, osVer):
     elif oper == "windows":
         rss = feedparser.parse("https://support.microsoft.com/en-us/feed/rss/6ae59d69-36fc-8e4d-23dd-631d98bf74a9")["entries"]
         for i in rss:
-            if "OS Build" in i["title"]:
+            if "OS Build" in i["title"] and "EXPIRED" not in i["title"] and "Out-of-band" not in i["title"]:
                 latest = re.findall("(\d*\.\d*)", i["title"])  # noqa: W605
                 print(latest)
                 for j in latest:
