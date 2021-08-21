@@ -172,6 +172,8 @@ def versionCmpOS(oper, osVer):
         for i in rss:
             if "OS Build" in i["title"] and "EXPIRED" not in i["title"] and "Out-of-band" not in i["title"]:
                 latest = re.findall("(\d*\.\d*)", i["title"])  # noqa: W605
+                if len(latest) == 1:
+                    continue
                 print(latest)
                 for j in latest:
                     if j in osVer:
